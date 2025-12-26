@@ -9,25 +9,40 @@ import os
 # ECA Layer (WAJIB untuk load model)
 # ===============================
 class ECALayer(tf.keras.layers.Layer):
-    def __init__(self, k_size=3, **kwargs):
+    def __init__(self, gamma=2, b=1, **kwargs):
         super(ECALayer, self).__init__(**kwargs)
-        self.k_size = k_size
+        self.gamma = gamma
+        self.b = b
 
     def build(self, input_shape):
+        channel = input_shape[-1]
+        t = int(abs((tf.math.log(tf.cast(channel, tf.float32)) / tf.math.log(2.0)) + self.b) / self.gamma)
+        k = t if t % 2 else t + 1
+
+        self.avg_pool = tf.keras.layers.GlobalAveragePooling2D()
         self.conv = tf.keras.layers.Conv1D(
             filters=1,
-            kernel_size=self.k_size,
+            kernel_size=k,
             padding='same',
             use_bias=False
         )
 
     def call(self, inputs):
-        x = tf.reduce_mean(inputs, axis=[1, 2], keepdims=True)
-        x = tf.squeeze(x, axis=1)
+        x = self.avg_pool(inputs)
+        x = tf.expand_dims(x, axis=-1)
         x = self.conv(x)
-        x = tf.expand_dims(x, axis=1)
+        x = tf.squeeze(x, axis=-1)
         x = tf.nn.sigmoid(x)
-        return inputs * x
+        return inputs * tf.expand_dims(x, axis=1)
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            "gamma": self.gamma,
+            "b": self.b
+        })
+        return config
+
 
 # ===============================
 # Konfigurasi
@@ -45,11 +60,11 @@ st.set_page_config(
 # ===============================
 @st.cache_resource
 def load_model():
-    model = tf.keras.models.load_model(
-        "model_deteksi_mata_v2.h5",
-        compile=False,
-        custom_objects={"ECALayer": ECALayer}
-    )
+   model = tf.keras.models.load_model(
+    "model_deteksi_mata_v2.h5",
+    custom_objects={"ECALayer": ECALayer},
+    compile=False
+)
     return model
 
 model = load_model()
