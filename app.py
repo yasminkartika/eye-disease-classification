@@ -64,8 +64,7 @@ def load_model():
     "model_deteksi_mata_v2.h5",
     custom_objects={"ECALayer": ECALayer},
     compile=False
-)
-    return model
+    )
 
 model = load_model()
 
