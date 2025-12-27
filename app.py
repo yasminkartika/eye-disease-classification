@@ -60,13 +60,15 @@ st.set_page_config(
 # ===============================
 @st.cache_resource
 def load_model():
-   model = tf.keras.models.load_model(
-    "model_deteksi_mata_v2.h5",
-    custom_objects={"ECALayer": ECALayer},
-    compile=False
+    model = tf.keras.models.load_model(
+        "model_deteksi_mata_v2.h5",
+        custom_objects={"ECALayer": ECALayer},
+        compile=False
     )
-   return model
+    return model
+
 model = load_model()
+
 
 # ===============================
 # UI Upload
