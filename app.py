@@ -10,7 +10,7 @@ import os
 # ===============================
 class ECALayer(tf.keras.layers.Layer):
     def __init__(self, gamma=2, b=1, **kwargs):
-        super(ECALayer, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.gamma = gamma
         self.b = b
 
@@ -23,7 +23,7 @@ class ECALayer(tf.keras.layers.Layer):
         self.conv = tf.keras.layers.Conv1D(
             filters=1,
             kernel_size=k,
-            padding='same',
+            padding="same",
             use_bias=False
         )
 
@@ -37,18 +37,14 @@ class ECALayer(tf.keras.layers.Layer):
 
     def get_config(self):
         config = super().get_config()
-        config.update({
-            "gamma": self.gamma,
-            "b": self.b
-        })
+        config.update({"gamma": self.gamma, "b": self.b})
         return config
 
 
 # ===============================
 # Konfigurasi
 # ===============================
-IMG_SIZE = (128, 128)
-CLASS_NAMES = ['Cataract', 'Diabetic Retinopathy', 'Glaucoma', 'Normal']
+CLASS_NAMES = ["Cataract", "Diabetic Retinopathy", "Glaucoma", "Normal"]
 
 st.set_page_config(
     page_title="Deteksi Penyakit Mata",
@@ -69,6 +65,14 @@ def load_model():
 
 model = load_model()
 
+# VALIDASI MODEL
+if model is None:
+    st.error("❌ Model gagal dimuat")
+    st.stop()
+
+# Ambil input size dari model (AMAN)
+_, H, W, C = model.input_shape
+IMG_SIZE = (W, H)
 
 # ===============================
 # UI Upload
@@ -95,52 +99,11 @@ with col2:
 # ===============================
 if uploaded_file and detect_button:
     with st.spinner("Memproses gambar..."):
-        img_resized = image.resize(IMG_SIZE)
-        img_array = np.array(img_resized) / 255.0
-        img_batch = np.expand_dims(img_array, axis=0)
+        image_resized = image.resize(IMG_SIZE)
 
-        prediction = model.predict(img_batch)
-        predicted_class = CLASS_NAMES[np.argmax(prediction)]
-        confidence = np.max(prediction) * 100
+        img_array = np.array(image_resized, dtype=np.float32)
 
-    st.markdown("---")
-    col1, col2 = st.columns([1, 1])
+        # Normalisasi sesuai MobileNetV2 (AMAN)
+        img_array = img_array / 255.0
 
-    with col1:
-        st.image(image, caption="Gambar yang Diperiksa", width=300)
-
-    with col2:
-        st.markdown("### 📊 Hasil Deteksi")
-        st.markdown(f"""
-        **<span style='font-size:26px'>{predicted_class}</span>**  
-        <span style='font-size:32px; color:red; font-weight:bold'>
-        {confidence:.2f}%
-        </span>
-        """, unsafe_allow_html=True)
-
-    # ===============================
-    # Simpan Riwayat
-    # ===============================
-    colA, colB = st.columns([1, 1])
-
-    with colA:
-        if st.button("💾 Simpan Hasil"):
-            if not os.path.exists("riwayat_deteksi"):
-                os.makedirs("riwayat_deteksi")
-
-            file_path = os.path.join(
-                "riwayat_deteksi", "riwayat_deteksi.txt"
-            )
-
-            with open(file_path, "a") as f:
-                f.write(
-                    f"{datetime.datetime.now()} | "
-                    f"{predicted_class} | "
-                    f"{confidence:.2f}%\n"
-                )
-
-            st.success("Hasil berhasil disimpan!")
-
-    with colB:
-        if st.button("🔁 Deteksi Ulang"):
-            st.experimental_rerun()
+        img_batch = np.expand_dims(img_array, a_
