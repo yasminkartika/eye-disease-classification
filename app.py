@@ -106,4 +106,49 @@ if uploaded_file and detect_button:
         # Normalisasi sesuai MobileNetV2 (AMAN)
         img_array = img_array / 255.0
 
-        img_batch = np.expand_dims(img_array, a_
+        img_batch = np.expand_dims(img_array, axis=0)
+
+        prediction = model.predict(img_batch, verbose=0)
+
+        predicted_class = CLASS_NAMES[np.argmax(prediction)]
+        confidence = float(np.max(prediction) * 100)
+
+    st.markdown("---")
+    col1, col2 = st.columns([1, 1])
+
+    with col1:
+        st.image(image, caption="Gambar yang Diperiksa", width=300)
+
+    with col2:
+        st.markdown("### 📊 Hasil Deteksi")
+        st.markdown(
+            f"""
+            **<span style='font-size:26px'>{predicted_class}</span>**  
+            <span style='font-size:32px; color:red; font-weight:bold'>
+            {confidence:.2f}%
+            </span>
+            """,
+            unsafe_allow_html=True
+        )
+
+    # ===============================
+    # Simpan Riwayat
+    # ===============================
+    colA, colB = st.columns([1, 1])
+
+    with colA:
+        if st.button("💾 Simpan Hasil"):
+            os.makedirs("riwayat_deteksi", exist_ok=True)
+
+            with open("riwayat_deteksi/riwayat_deteksi.txt", "a") as f:
+                f.write(
+                    f"{datetime.datetime.now()} | "
+                    f"{predicted_class} | "
+                    f"{confidence:.2f}%\n"
+                )
+
+            st.success("Hasil berhasil disimpan!")
+
+    with colB:
+        if st.button("🔁 Deteksi Ulang"):
+            st.experimental_rerun()
