@@ -77,6 +77,7 @@ IMG_SIZE = (W, H)
 # ===============================
 # UI Upload
 # ===============================
+st.markdown("## 🧿 Sedang Dalam Penyempurnaan Tampilan:)")
 st.markdown("## 🧿 Unggah Gambar Citra Fundus Mata")
 
 col1, col2 = st.columns([1, 1])
