@@ -99,8 +99,8 @@ st.markdown("""
 # ===============================
 st.markdown("""
 <div class="header-box">
-    <h1>👁️ EyeCare AI Diagnostic System</h1>
-    <p>Sistem Deteksi Penyakit Mata Berbasis Artificial Intelligence</p>
+    <h1>👁️ EyeCare Diagnostic System</h1>
+    <p>Sistem Deteksi Penyakit Mata</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -123,10 +123,20 @@ with col1:
     detect_button = st.button("🔍 Analisis Sekarang", use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-with col2:
-    if uploaded_file:
+if uploaded_file and detect_button:
+    with st.spinner("sedang menganalisis citra..."):
+
+        # BUKA GAMBAR DI SINI (AMAN)
         image = Image.open(uploaded_file).convert("RGB")
-        st.image(image, caption="Preview Citra", use_container_width=True)
+
+        image_resized = image.resize(IMG_SIZE)
+        img_array = np.array(image_resized, dtype=np.float32) / 255.0
+        img_batch = np.expand_dims(img_array, axis=0)
+
+        prediction = model.predict(img_batch, verbose=0)
+
+        predicted_class = CLASS_NAMES[np.argmax(prediction)]
+        confidence = float(np.max(prediction) * 100)
 
 # ===============================
 # DETEKSI
