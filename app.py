@@ -90,9 +90,13 @@ with col1:
     )
     detect_button = st.button("🔍 Deteksi Sekarang", use_container_width=True)
 
+image = None
+
+if uploaded_file:
+    image = Image.open(uploaded_file).convert("RGB")
+
 with col2:
-    if uploaded_file:
-        image = Image.open(uploaded_file).convert("RGB")
+    if image is not None:
         st.image(image, use_container_width=True)
 
 # ===============================
