@@ -118,8 +118,8 @@ IMG_SIZE = (W, H)
 # ===============================
 st.markdown("""
 <div class="header-box">
-    <h1>👁️ EyeCare AI Diagnostic System</h1>
-    <p>Sistem Deteksi Penyakit Mata Berbasis Artificial Intelligence</p>
+    <h1>👁️ EyeCare Diagnostic System</h1>
+    <p>Sistem Deteksi Penyakit Mata</p>
 </div>
 """, unsafe_allow_html=True)
 
