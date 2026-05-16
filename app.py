@@ -151,7 +151,7 @@ with col2:
 # DETEKSI (TIDAK DIUBAH LOGIKANYA)
 # ===============================
 if uploaded_file and detect_button:
-    with st.spinner("AI sedang menganalisis citra..."):
+    with st.spinner("Sedang menganalisis citra..."):
         image_resized = image.resize(IMG_SIZE)
         img_array = np.array(image_resized, dtype=np.float32) / 255.0
         img_batch = np.expand_dims(img_array, axis=0)
@@ -163,7 +163,7 @@ if uploaded_file and detect_button:
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown('<div class="result-card">', unsafe_allow_html=True)
 
-    st.subheader("📊 Hasil Analisis AI")
+    st.subheader("📊 Hasil Analisis")
 
     color_dict = {
         "Normal": "#2ecc71",
