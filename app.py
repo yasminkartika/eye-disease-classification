@@ -47,7 +47,7 @@ class ECALayer(tf.keras.layers.Layer):
 CLASS_NAMES = ["Cataract", "Diabetic Retinopathy", "Glaucoma", "Normal"]
 
 st.set_page_config(
-    page_title="EyeCare AI - Deteksi Penyakit Mata",
+    page_title="EyeCare - Deteksi Penyakit Mata",
     layout="wide"
 )
 
