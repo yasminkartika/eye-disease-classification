@@ -115,22 +115,49 @@ if uploaded_file and detect_button:
         confidence = float(np.max(prediction) * 100)
 
     st.markdown("---")
-    col1, col2 = st.columns([1, 1])
 
-    with col1:
-        st.image(image, caption="Gambar yang Diperiksa", width=300)
+col1, col2 = st.columns([1, 1])
 
-    with col2:
-        st.markdown("### 📊 Hasil Deteksi")
-        st.markdown(
-            f"""
-            **<span style='font-size:26px'>{predicted_class}</span>**  
-            <span style='font-size:32px; color:red; font-weight:bold'>
-            {confidence:.2f}%
-            </span>
-            """,
-            unsafe_allow_html=True
-        )
+with col1:
+    st.image(image, caption="Citra Fundus yang Dianalisis", use_container_width=True)
+
+with col2:
+    st.markdown("### 🏥 Hasil Analisis")
+
+    if predicted_class == "Normal":
+        warna = "#2E7D32"
+        bg = "#E8F5E9"
+        keterangan = "Tidak ditemukan indikasi penyakit pada citra."
+    else:
+        warna = "#1565C0"
+        bg = "#E3F2FD"
+        keterangan = "Terdeteksi indikasi kelainan. Disarankan pemeriksaan lanjutan oleh dokter spesialis mata."
+
+    st.markdown(
+        f"""
+        <div style="
+            background-color:{bg};
+            padding:20px;
+            border-radius:12px;
+            border-left:6px solid {warna};
+        ">
+            <h2 style="color:{warna}; margin-bottom:10px;">
+                {predicted_class}
+            </h2>
+            <p style="font-size:18px; margin:5px 0;">
+                Tingkat Keyakinan: <strong>{confidence:.2f}%</strong>
+            </p>
+            <p style="font-size:15px; color:#444;">
+                {keterangan}
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    st.progress(confidence / 100)
+
+    st.caption("Sistem ini merupakan alat bantu skrining awal dan tidak menggantikan diagnosis dokter.")
 
     # ===============================
     # Simpan Riwayat
