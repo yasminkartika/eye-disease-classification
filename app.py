@@ -42,20 +42,17 @@ class ECALayer(tf.keras.layers.Layer):
 
 
 # ===============================
-# Konfigurasi
+# KONFIGURASI
 # ===============================
 CLASS_NAMES = ["Cataract", "Diabetic Retinopathy", "Glaucoma", "Normal"]
 
-# ===============================
-# PAGE CONFIG
-# ===============================
 st.set_page_config(
     page_title="EyeCare AI - Deteksi Penyakit Mata",
     layout="wide"
 )
 
 # ===============================
-# CUSTOM CSS (BIAR KAYA ECOMMERCE / WEBSITE RS)
+# CUSTOM CSS
 # ===============================
 st.markdown("""
 <style>
@@ -95,12 +92,34 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ===============================
+# LOAD MODEL (TIDAK DIUBAH)
+# ===============================
+@st.cache_resource
+def load_model():
+    model = tf.keras.models.load_model(
+        "model_deteksi_mata_v2.h5",
+        custom_objects={"ECALayer": ECALayer},
+        compile=False
+    )
+    return model
+
+model = load_model()
+
+if model is None:
+    st.error("❌ Model gagal dimuat")
+    st.stop()
+
+# AMBIL INPUT SIZE DARI MODEL (TETAP)
+_, H, W, C = model.input_shape
+IMG_SIZE = (W, H)
+
+# ===============================
 # HEADER
 # ===============================
 st.markdown("""
 <div class="header-box">
-    <h1>👁️ EyeCare Diagnostic System</h1>
-    <p>Sistem Deteksi Penyakit Mata</p>
+    <h1>👁️ EyeCare AI Diagnostic System</h1>
+    <p>Sistem Deteksi Penyakit Mata Berbasis Artificial Intelligence</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -123,23 +142,13 @@ with col1:
     detect_button = st.button("🔍 Analisis Sekarang", use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-if uploaded_file and detect_button:
-    with st.spinner("sedang menganalisis citra..."):
-
-        # BUKA GAMBAR DI SINI (AMAN)
+with col2:
+    if uploaded_file:
         image = Image.open(uploaded_file).convert("RGB")
-
-        image_resized = image.resize(IMG_SIZE)
-        img_array = np.array(image_resized, dtype=np.float32) / 255.0
-        img_batch = np.expand_dims(img_array, axis=0)
-
-        prediction = model.predict(img_batch, verbose=0)
-
-        predicted_class = CLASS_NAMES[np.argmax(prediction)]
-        confidence = float(np.max(prediction) * 100)
+        st.image(image, caption="Preview Citra", use_container_width=True)
 
 # ===============================
-# DETEKSI
+# DETEKSI (TIDAK DIUBAH LOGIKANYA)
 # ===============================
 if uploaded_file and detect_button:
     with st.spinner("AI sedang menganalisis citra..."):
@@ -152,12 +161,10 @@ if uploaded_file and detect_button:
         confidence = float(np.max(prediction) * 100)
 
     st.markdown("<br>", unsafe_allow_html=True)
-
     st.markdown('<div class="result-card">', unsafe_allow_html=True)
 
     st.subheader("📊 Hasil Analisis AI")
 
-    # Warna badge sesuai penyakit
     color_dict = {
         "Normal": "#2ecc71",
         "Cataract": "#f39c12",
@@ -181,7 +188,6 @@ if uploaded_file and detect_button:
 
     st.markdown("---")
 
-    # INFO PENYAKIT (kaya ecommerce description)
     disease_info = {
         "Normal": "Tidak ditemukan indikasi kelainan signifikan pada retina.",
         "Cataract": "Katarak adalah kondisi kekeruhan pada lensa mata yang menyebabkan penglihatan kabur.",
