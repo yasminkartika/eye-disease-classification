@@ -46,141 +46,160 @@ class ECALayer(tf.keras.layers.Layer):
 # ===============================
 CLASS_NAMES = ["Cataract", "Diabetic Retinopathy", "Glaucoma", "Normal"]
 
+# ===============================
+# PAGE CONFIG
+# ===============================
 st.set_page_config(
-    page_title="Deteksi Penyakit Mata",
-    layout="centered"
+    page_title="EyeCare AI - Deteksi Penyakit Mata",
+    layout="wide"
 )
 
 # ===============================
-# Load Model
+# CUSTOM CSS (BIAR KAYA ECOMMERCE / WEBSITE RS)
 # ===============================
-@st.cache_resource
-def load_model():
-    model = tf.keras.models.load_model(
-        "model_deteksi_mata_v2.h5",
-        custom_objects={"ECALayer": ECALayer},
-        compile=False
-    )
-    return model
+st.markdown("""
+<style>
+.main {
+    background-color: #f4f6f9;
+}
 
-model = load_model()
+.header-box {
+    background: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+    padding: 30px;
+    border-radius: 15px;
+    color: white;
+}
 
-# VALIDASI MODEL
-if model is None:
-    st.error("❌ Model gagal dimuat")
-    st.stop()
+.result-card {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0px 4px 20px rgba(0,0,0,0.08);
+}
 
-# Ambil input size dari model (AMAN)
-_, H, W, C = model.input_shape
-IMG_SIZE = (W, H)
+.upload-card {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0px 4px 20px rgba(0,0,0,0.05);
+}
+
+.badge {
+    padding: 8px 18px;
+    border-radius: 20px;
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # ===============================
-# UI Upload
+# HEADER
 # ===============================
-st.markdown("## 🧿 Sedang Dalam Penyempurnaan Tampilan:)")
-st.markdown("## 🧿 Unggah Gambar Citra Fundus Mata")
+st.markdown("""
+<div class="header-box">
+    <h1>👁️ EyeCare AI Diagnostic System</h1>
+    <p>Sistem Deteksi Penyakit Mata Berbasis Artificial Intelligence</p>
+</div>
+""", unsafe_allow_html=True)
 
-col1, col2 = st.columns([1, 1])
+st.markdown("<br>", unsafe_allow_html=True)
+
+# ===============================
+# MAIN LAYOUT
+# ===============================
+col1, col2 = st.columns([1,1])
 
 with col1:
+    st.markdown('<div class="upload-card">', unsafe_allow_html=True)
+    st.subheader("📤 Upload Citra Fundus")
+
     uploaded_file = st.file_uploader(
-        "Unggah Gambar",
-        type=["jpg", "jpeg", "png"],
-        label_visibility="collapsed"
+        "Unggah gambar fundus",
+        type=["jpg","jpeg","png"]
     )
-    detect_button = st.button("🔍 Deteksi Sekarang", use_container_width=True)
 
-image = None
-
-if uploaded_file:
-    image = Image.open(uploaded_file).convert("RGB")
+    detect_button = st.button("🔍 Analisis Sekarang", use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
 with col2:
-    if image is not None:
-        st.image(image, use_container_width=True)
+    if uploaded_file:
+        image = Image.open(uploaded_file).convert("RGB")
+        st.image(image, caption="Preview Citra", use_container_width=True)
 
 # ===============================
-# Proses Deteksi
+# DETEKSI
 # ===============================
 if uploaded_file and detect_button:
-    with st.spinner("Memproses gambar..."):
+    with st.spinner("AI sedang menganalisis citra..."):
         image_resized = image.resize(IMG_SIZE)
-
-        img_array = np.array(image_resized, dtype=np.float32)
-
-        # Normalisasi sesuai MobileNetV2 (AMAN)
-        img_array = img_array / 255.0
-
+        img_array = np.array(image_resized, dtype=np.float32) / 255.0
         img_batch = np.expand_dims(img_array, axis=0)
-
         prediction = model.predict(img_batch, verbose=0)
 
         predicted_class = CLASS_NAMES[np.argmax(prediction)]
         confidence = float(np.max(prediction) * 100)
 
-    st.markdown("---")
+    st.markdown("<br>", unsafe_allow_html=True)
 
-col1, col2 = st.columns([1, 1])
+    st.markdown('<div class="result-card">', unsafe_allow_html=True)
 
-with col1:
-    st.image(image, caption="Citra Fundus yang Dianalisis", use_container_width=True)
+    st.subheader("📊 Hasil Analisis AI")
 
-with col2:
-    st.markdown("### 🏥 Hasil Analisis")
+    # Warna badge sesuai penyakit
+    color_dict = {
+        "Normal": "#2ecc71",
+        "Cataract": "#f39c12",
+        "Diabetic Retinopathy": "#e74c3c",
+        "Glaucoma": "#8e44ad"
+    }
 
-    if predicted_class == "Normal":
-        warna = "#2E7D32"
-        bg = "#E8F5E9"
-        keterangan = "Tidak ditemukan indikasi penyakit pada citra."
-    else:
-        warna = "#1565C0"
-        bg = "#E3F2FD"
-        keterangan = "Terdeteksi indikasi kelainan. Disarankan pemeriksaan lanjutan oleh dokter spesialis mata."
+    badge_color = color_dict.get(predicted_class, "#34495e")
 
     st.markdown(
         f"""
-        <div style="
-            background-color:{bg};
-            padding:20px;
-            border-radius:12px;
-            border-left:6px solid {warna};
-        ">
-            <h2 style="color:{warna}; margin-bottom:10px;">
-                {predicted_class}
-            </h2>
-            <p style="font-size:18px; margin:5px 0;">
-                Tingkat Keyakinan: <strong>{confidence:.2f}%</strong>
-            </p>
-            <p style="font-size:15px; color:#444;">
-                {keterangan}
-            </p>
+        <div class="badge" style="background:{badge_color};">
+        {predicted_class}
         </div>
         """,
         unsafe_allow_html=True
     )
 
-    st.progress(confidence / 100)
+    st.markdown(f"### Tingkat Keyakinan: {confidence:.2f}%")
+    st.progress(int(confidence))
 
-    st.caption("Sistem ini merupakan alat bantu skrining awal dan tidak menggantikan diagnosis dokter.")
+    st.markdown("---")
+
+    # INFO PENYAKIT (kaya ecommerce description)
+    disease_info = {
+        "Normal": "Tidak ditemukan indikasi kelainan signifikan pada retina.",
+        "Cataract": "Katarak adalah kondisi kekeruhan pada lensa mata yang menyebabkan penglihatan kabur.",
+        "Diabetic Retinopathy": "Komplikasi diabetes yang merusak pembuluh darah retina.",
+        "Glaucoma": "Kerusakan saraf optik akibat peningkatan tekanan bola mata."
+    }
+
+    st.markdown("### 📝 Informasi Medis")
+    st.write(disease_info.get(predicted_class,""))
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
     # ===============================
-    # Simpan Riwayat
+    # SIMPAN
     # ===============================
-    colA, colB = st.columns([1, 1])
+    colA, colB = st.columns(2)
 
     with colA:
-        if st.button("💾 Simpan Hasil"):
+        if st.button("💾 Simpan Hasil Rekam Medis"):
             os.makedirs("riwayat_deteksi", exist_ok=True)
-
             with open("riwayat_deteksi/riwayat_deteksi.txt", "a") as f:
                 f.write(
                     f"{datetime.datetime.now()} | "
                     f"{predicted_class} | "
                     f"{confidence:.2f}%\n"
                 )
-
-            st.success("Hasil berhasil disimpan!")
+            st.success("Data berhasil disimpan")
 
     with colB:
-        if st.button("🔁 Deteksi Ulang"):
-            st.experimental_rerun()
+        if st.button("🔁 Analisis Ulang"):
+            st.rerun()
